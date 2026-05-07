@@ -22,8 +22,9 @@ class GlobalTE:
                             "to run vLLM with MooncakeConnector."
                         ) from e
                     self.transfer_engine = TransferEngine()
-                    device_name = device_name if device_name is not None else ""
-                    ret_value = self.transfer_engine.initialize(hostname, "P2PHANDSHAKE", "ascend", device_name)
+                    protocol = os.getenv("VLLM_ASCEND_MOONCAKE_PROTOCOL", "ascend")
+                    device_name = device_name if device_name is not None else os.getenv("VLLM_ASCEND_MOONCAKE_DEVICE_NAME", "")
+                    ret_value = self.transfer_engine.initialize(hostname, "P2PHANDSHAKE", protocol, device_name)
                     if ret_value != 0:
                         raise RuntimeError(f"TransferEngine initialization failed with ret_value: {ret_value}")
         return self.transfer_engine
