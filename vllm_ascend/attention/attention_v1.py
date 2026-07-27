@@ -136,6 +136,21 @@ class AscendAttentionBackend(AttentionBackend):
             value_caches[dst_indices] = value_caches[src_indices]
 
     @staticmethod
+    def get_kv_cache_stride_order(
+        include_num_layers_dimension: bool = False,
+    ) -> tuple[int, ...]:
+        # NPU logical shape (without layers): (2, num_blocks, block_size, num_kv_heads, head_size)
+        # Physical layout for cross-layer KV transfer: num_blocks is outermost so
+        # per-block all-layers data is contiguous.
+        # With layers prepended (logical): (num_layers, 2, num_blocks, block_size, num_kv_heads, head_size)
+        # Desired physical:                (num_blocks, num_layers, 2, block_size, num_kv_heads, head_size)
+        # stride_order[i] = logical index of physical position i
+        if include_num_layers_dimension:
+            return (2, 0, 1, 3, 4, 5)
+        # Without layers: identity (no reordering needed for per-layer tensors)
+        return (0, 1, 2, 3, 4)
+
+    @staticmethod
     def get_supported_kernel_block_sizes() -> list[int]:
         return [128]
 

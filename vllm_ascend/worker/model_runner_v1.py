@@ -3923,7 +3923,14 @@ class NPUModelRunner(GPUModelRunner):
             self.drafter.initialize_attn_backend(kv_cache_config, block_size)
 
         if has_kv_transfer_group():
-            get_kv_transfer_group().register_kv_caches(kv_caches)
+            kv_transfer_group = get_kv_transfer_group()
+            if self.cross_layers_kv_cache is not None:
+                assert self.cross_layers_attn_backend is not None
+                kv_transfer_group.register_cross_layers_kv_cache(
+                    self.cross_layers_kv_cache, self.cross_layers_attn_backend
+                )
+            else:
+                kv_transfer_group.register_kv_caches(kv_caches)
 
         if self.model_config.enable_return_routed_experts:
             self.init_routed_experts_capturer()
@@ -3966,10 +3973,32 @@ class NPUModelRunner(GPUModelRunner):
             Dict[str, torch.Tensor]: A map between layer names to their
             corresponding memory buffer for KV cache.
         """
-        # Initialize the memory buffer for KV cache
-        kv_cache_raw_tensors = self._allocate_kv_cache_tensors(kv_cache_config)
-        # Change the memory buffer to the desired shape
-        kv_caches = self._reshape_kv_cache_tensors(kv_cache_config, kv_cache_raw_tensors)
+        from vllm.v1.worker.kv_connector_model_runner_mixin import KVConnectorModelRunnerMixin
+
+        # Try creating KV caches optimized for kv-connector cross-layer transfers.
+        # kernel_block_sizes is list[list[int]] on NPU; allocate_uniform_kv_caches
+        # expects list[int] (one flat entry per group).
+        flat_kernel_block_sizes = [
+            sizes[0] if isinstance(sizes, list) else sizes
+            for sizes in self.kernel_block_sizes
+        ]
+        if KVConnectorModelRunnerMixin.use_uniform_kv_cache(self.attn_groups):
+            kv_caches, cross_layers_kv_cache, attn_backend = (
+                KVConnectorModelRunnerMixin.allocate_uniform_kv_caches(
+                    kv_cache_config,
+                    self.attn_groups,
+                    self.cache_config.cache_dtype,
+                    self.device,
+                    flat_kernel_block_sizes,
+                )
+            )
+            self.cross_layers_kv_cache = cross_layers_kv_cache
+            self.cross_layers_attn_backend = attn_backend
+        else:
+            # Initialize the memory buffer for KV cache
+            kv_cache_raw_tensors = self._allocate_kv_cache_tensors(kv_cache_config)
+            # Change the memory buffer to the desired shape
+            kv_caches = self._reshape_kv_cache_tensors(kv_cache_config, kv_cache_raw_tensors)
 
         # Set up cross-layer KV cache sharing
         for layer_name, target_layer_name in self.shared_kv_cache_layers.items():
@@ -4892,6 +4921,10 @@ class NPUModelRunner(GPUModelRunner):
                     kv_cache_spec[layer_name] = spec
             elif isinstance(attn_module, Attention):
                 if spec := attn_module.get_kv_cache_spec(self.vllm_config):
+                    if isinstance(spec, AttentionSpec):
+                        backend = attn_module.get_attn_backend()
+                        indexes = backend.indexes_kv_by_block_stride()
+                        spec = replace(spec, indexes_kv_by_block_stride=indexes)
                     kv_cache_spec[layer_name] = spec
                     attn_layer_names.add(layer_name)
 

@@ -1411,6 +1411,7 @@ class MooncakeConnectorMetadata(KVConnectorMetadata):
 class MooncakeConnector(KVConnectorBase_V1, SupportsHMA):
     def __init__(self, vllm_config: VllmConfig, role: KVConnectorRole, kv_cache_config: KVCacheConfig | None = None):
         assert vllm_config.kv_transfer_config is not None
+        self._vllm_config_ref = vllm_config
         self.engine_id = vllm_config.kv_transfer_config.engine_id
         self._connector_metadata = MooncakeConnectorMetadata()
 
@@ -1422,6 +1423,22 @@ class MooncakeConnector(KVConnectorBase_V1, SupportsHMA):
         elif role == KVConnectorRole.WORKER:
             self.connector_scheduler = None
             self.connector_worker = MooncakeConnectorWorker(vllm_config, str(self.engine_id), kv_cache_config)
+
+    @property
+    def prefer_cross_layer_blocks(self) -> bool:
+        """Enable cross-layer KV layout when configured via extra_config.
+
+        Set ``enable_cross_layers_blocks: true`` in kv_connector_extra_config
+        to allow the model runner to allocate a single contiguous tensor for
+        all layers.  This reduces HCCL/Mooncake registration count and enables
+        block-granularity all-layer transfers.
+
+        Only supported for uniform single-group attention models (no MLA, no
+        Mamba hybrids).  The model runner's use_uniform_kv_cache() gate
+        enforces those constraints; this flag is a pure opt-in knob.
+        """
+        extra_config = self._vllm_config_ref.kv_transfer_config.kv_connector_extra_config or {}
+        return str(extra_config.get("enable_cross_layers_blocks", "False")).lower() == "true"
 
     ############################################################
     # Scheduler Side Methods
@@ -1464,6 +1481,12 @@ class MooncakeConnector(KVConnectorBase_V1, SupportsHMA):
     def register_kv_caches(self, kv_caches: dict[str, torch.Tensor]):
         assert self.connector_worker is not None
         self.connector_worker.register_kv_caches(kv_caches)
+
+    def register_cross_layers_kv_cache(
+        self, kv_cache: torch.Tensor, attn_backend: type
+    ) -> None:
+        assert self.connector_worker is not None
+        self.connector_worker.register_cross_layers_kv_cache(kv_cache, attn_backend)
 
     def get_finished(self, finished_req_ids: set[str]) -> tuple[set[str], set[str]]:
         """Get the finished recving and sending requests."""
@@ -2220,6 +2243,61 @@ class MooncakeConnectorWorker:
                 lengths.append(single_kv_cache.element_size() * math.prod(single_kv_cache.shape))
 
         return ptrs, lengths
+
+    def register_cross_layers_kv_cache(
+        self, kv_cache: torch.Tensor, attn_backend: type
+    ) -> None:
+        """Register a cross-layer KV cache tensor.
+
+        ``allocate_uniform_kv_caches`` builds the cross-layer tensor with
+        physical shape ``(num_blocks, num_layers, 2, block_size, num_kv_heads,
+        head_size)`` for the NPU backend (stride_order=(2,0,1,3,4,5)).
+
+        We recover the logical ``(num_layers, 2, num_blocks, …)`` view via
+        ``permute(inv_order)``, then slice it into per-layer ``(k, v)`` tuples
+        that ``register_kv_caches`` already knows how to handle.
+
+        Layer names and their order come from
+        ``kv_cache_config.kv_cache_tensors``, which mirrors exactly the order
+        used by ``allocate_uniform_kv_caches`` when building the tensor.
+        """
+        try:
+            stride_order = attn_backend.get_kv_cache_stride_order(
+                include_num_layers_dimension=True
+            )
+            inv_order = [stride_order.index(i) for i in range(len(stride_order))]
+            # logical shape: (num_layers, 2, num_blocks, block_size, num_kv_heads, head_size)
+            logical = kv_cache.permute(*inv_order)
+        except (AttributeError, NotImplementedError):
+            # Backend does not expose stride_order — assume tensor is already
+            # in logical order (num_layers first).
+            logger.warning(
+                "attn_backend %s does not expose get_kv_cache_stride_order; "
+                "assuming cross-layer tensor is already in logical "
+                "(num_layers, …) order.",
+                getattr(attn_backend, "__name__", attn_backend),
+            )
+            logical = kv_cache
+
+        # logical[i] → (2, num_blocks, block_size, num_kv_heads, head_size)
+        # kv_caches expects layer_name → (k_tensor, v_tensor) where
+        # k_tensor / v_tensor are (num_blocks, block_size, num_kv_heads, head_size)
+        kv_caches_from_cross: dict[str, Any] = {}
+        for i, kv_cache_tensor in enumerate(self.kv_cache_config.kv_cache_tensors):
+            per_layer = logical[i]  # (2, num_blocks, block_size, num_kv_heads, head_size)
+            k_view = per_layer[0]   # (num_blocks, block_size, num_kv_heads, head_size)
+            v_view = per_layer[1]
+            for layer_name in kv_cache_tensor.shared_by:
+                kv_caches_from_cross[layer_name] = (k_view, v_view)
+
+        logger.info(
+            "register_cross_layers_kv_cache: decomposed cross-layer tensor "
+            "(shape=%s) into %d per-layer (k, v) pairs; delegating to "
+            "register_kv_caches.",
+            tuple(kv_cache.shape),
+            len(kv_caches_from_cross),
+        )
+        self.register_kv_caches(kv_caches_from_cross)
 
     def register_kv_caches(self, kv_caches: dict[str, torch.Tensor]):
         """Register the KV Cache data."""
