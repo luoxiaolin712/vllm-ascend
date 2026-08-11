@@ -52,6 +52,7 @@ from vllm_ascend.ascend_forward_context import (
 )
 from vllm_ascend.ops.rotary_embedding import set_cos_and_sin, update_cos_sin
 from vllm_ascend.utils import enable_sp, set_potential_max_tokens
+from vllm.distributed.kv_transfer import get_kv_transfer_group, has_kv_transfer_group
 from vllm_ascend.worker.v2.aclgraph_utils import ModelAclGraphManager
 from vllm_ascend.worker.v2.attn_utils import build_attn_state
 from vllm_ascend.worker.v2.eplb import AscendEPLBController
@@ -118,6 +119,16 @@ class NPUModelRunner(GPUModelRunner):
     execute_model_state: ExecuteModelState | None
 
     def __init__(self, vllm_config: VllmConfig, device: torch.device):
+        # Must be set before super().__init__() because parent init may call
+        # _allocate_kv_cache which accesses self.use_compress.
+        model_config = getattr(vllm_config, "model_config", None)
+        hf_config = getattr(model_config, "hf_config", None) if model_config else None
+        self.use_compress = (
+            hf_config is not None and hasattr(hf_config, "compress_ratios")
+        )
+        # Cross-layer KV cache for kv-connector uniform allocation.
+        self.cross_layers_kv_cache = None
+        self.cross_layers_attn_backend = None
         # Ascend-specific configurations
         self.ascend_config = get_ascend_config()
         # FusedMoE can be constructed by the parent initializer and reads this
@@ -182,6 +193,19 @@ class NPUModelRunner(GPUModelRunner):
             device=self.device,
         )
 
+        # DSA positions on CPU for compress (DSV4) models.
+        # npu attention backend needs positions on CPU side for DSA path.
+        self._dsa_positions_cpu_buf = torch.zeros(
+            self.max_num_tokens,
+            dtype=torch.int64,
+            device="cpu",
+            pin_memory=True,
+        )
+        self._dsa_positions_np_buf = self._dsa_positions_cpu_buf.numpy()
+        # Reusable arange buffer for per-token local position computation.
+        # int64 to match the positions dtype expected by the DSA backend.
+        self._token_offsets_np = np.arange(self.max_num_tokens, dtype=np.int64)
+
         # we need to copy num_computed_tokens back to cpu to help
         # update actual seq_lens_cpu. gpu attention backend doesn't need these
         # attributes, cause their attention backends doesn't use seq_lens_cpu.
@@ -218,6 +242,19 @@ class NPUModelRunner(GPUModelRunner):
                 self.req_states,
                 self.block_tables,
             )
+
+            # Register cross-layer KV cache with kv-transfer group if the
+            # uniform layout was used. Falls back to regular per-layer
+            # registration handled by the parent's ActiveKVConnector otherwise.
+            # NOTE: v2's parent uses init_kv_cache (module function) for KV
+            # cache allocation, so cross_layers_kv_cache is populated by the
+            # patched attn_utils when use_uniform_kv_cache is True.
+            if has_kv_transfer_group() and self.cross_layers_kv_cache is not None:
+                assert self.cross_layers_attn_backend is not None
+                get_kv_transfer_group().register_cross_layers_kv_cache(
+                    self.cross_layers_kv_cache,
+                    self.cross_layers_attn_backend,
+                )
 
     @torch.inference_mode()
     def execute_model(
@@ -437,6 +474,39 @@ class NPUModelRunner(GPUModelRunner):
         seq_lens_cpu_upper_bound = torch.from_numpy(seq_lens_cpu_upper_bound_np)
         num_computed_tokens_np = self.req_states.num_computed_tokens_np[idx_mapping_np]
 
+        # For compress (DSV4) models, the DSA attention backend needs the
+        # per-token absolute positions on CPU. Compute from numpy to avoid a
+        # GPU->CPU sync (positions are already on GPU via prepare_pos_seq_lens).
+        # Mirrors v1: dsa_pos = num_computed_tokens[req] + local_pos_in_req.
+        positions_cpu = None
+        if self.use_compress:
+            # Expand per-request num_computed_tokens to per-token via repeat,
+            # matching v1's np.repeat(arange[:num_reqs], num_scheduled_tokens).
+            total_num_scheduled = int(num_scheduled_tokens[:num_reqs].sum())
+            req_indices_np = np.repeat(
+                idx_mapping_np[:num_reqs], num_scheduled_tokens[:num_reqs]
+            )
+            num_computed_per_token_np = (
+                self.req_states.num_computed_tokens_np[req_indices_np]
+            )
+            # local_pos = token_index - request_start (position within request).
+            req_starts_per_token_np = np.repeat(
+                query_start_loc_np[:num_reqs], num_scheduled_tokens[:num_reqs]
+            )
+            token_offsets_np = self._token_offsets_np[:total_num_scheduled]
+            local_pos_np = token_offsets_np - req_starts_per_token_np
+            dsa_positions_np = self._dsa_positions_np_buf[:total_num_scheduled]
+            np.add(
+                num_computed_per_token_np,
+                local_pos_np,
+                out=dsa_positions_np,
+            )
+            # Pad to num_tokens_after_padding if needed (padding tokens get 0).
+            if total_num_scheduled < num_tokens_after_padding:
+                dsa_positions_np = self._dsa_positions_np_buf[:num_tokens_after_padding]
+                dsa_positions_np[total_num_scheduled:] = 0
+            positions_cpu = self._dsa_positions_cpu_buf[:num_tokens_after_padding]
+
         max_seq_len_np = None
         if self.use_pp:
             # max_seq_len is only consumed by the PP `compute_need_sampled_mask`
@@ -482,6 +552,13 @@ class NPUModelRunner(GPUModelRunner):
             # extra attributes for ascend npus.
             seq_lens_np=self.input_buffers.seq_lens_np,
             attn_state=attn_state,
+            # Cross-layer (DSV4 compress) buffers for SFA/DSA attention.
+            # NOTE: these buffers are per-token (same length as slot_mapping),
+            # not per-request, per the store_kv_block_metadata kernel contract.
+            group_len=self.input_buffers.group_len[:num_tokens_after_padding],
+            group_key_idx=self.input_buffers.group_key_idx[:num_tokens_after_padding],
+            group_key_cache_idx=self.input_buffers.group_key_cache_idx[:num_tokens_after_padding],
+            positions_cpu=positions_cpu,
         )
 
         input_batch = vllm_model_runner.pcp.maybe_partition_pcp_batch(self.pcp_manager, input_batch)

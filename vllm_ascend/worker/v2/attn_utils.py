@@ -120,7 +120,12 @@ def build_attn_metadata(
     seq_lens_cpu_upper_bound: torch.Tensor | None = None,
     num_computed_tokens_cpu: torch.Tensor | None = None,
     positions: torch.Tensor | None = None,
+    positions_cpu: torch.Tensor | None = None,
     attn_state: Any | None = None,
+    # Cross-layer (DSV4 compress) SFA buffers.
+    group_len: torch.Tensor | None = None,
+    group_key_idx: torch.Tensor | None = None,
+    group_key_cache_idx: torch.Tensor | None = None,
     graph_pad_size: int = -1,
     num_actual_tokens: int | None = None,
     num_input_tokens: int | None = None,
@@ -180,11 +185,15 @@ def build_attn_metadata(
             block_table_tensor=block_table,
             slot_mapping=slot_mapping,
             positions=positions,
+            positions_cpu=positions_cpu,
             attn_state=attn_state,
             graph_pad_size=graph_pad_size,
             num_input_tokens=num_input_tokens,
             max_seq_len=max_seq_len,
             causal=group_causal,
+            group_len=group_len,
+            group_key_idx=group_key_idx,
+            group_key_cache_idx=group_key_cache_idx,
             **common_attn_metadata_extra_kwargs,
         )
 

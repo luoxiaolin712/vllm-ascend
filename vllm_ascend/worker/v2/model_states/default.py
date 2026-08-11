@@ -75,7 +75,12 @@ class AscendModelState(DefaultModelState):
             # extra attributes for ascend npus.
             seq_lens_np=input_batch.seq_lens_np,
             positions=input_batch.positions,
+            positions_cpu=input_batch.positions_cpu,
             attn_state=input_batch.attn_state,
+            # Cross-layer (DSV4 compress) SFA buffers.
+            group_len=input_batch.group_len,
+            group_key_idx=input_batch.group_key_idx,
+            group_key_cache_idx=input_batch.group_key_cache_idx,
             for_cudagraph_capture=for_capture,
         )
         return self.attn_metadata

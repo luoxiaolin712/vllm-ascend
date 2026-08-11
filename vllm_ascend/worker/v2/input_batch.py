@@ -61,6 +61,21 @@ class AscendInputBuffers(InputBuffers):
         # define seq_lens_np for easier calculation with numpy.
         self.seq_lens_np: np.ndarray = self.seq_lens_cpu.numpy()
 
+        # Cross-layer (DSV4 compress) SFA workspace buffers.
+        # These are output tensors filled by store_kv_block_metadata and
+        # consumed by the Ascend attention backend.
+        # NOTE: outputs are pre-allocated with the same length as slot_mapping
+        # (per-token, not per-request), per the C++ kernel contract.
+        self.group_len: torch.Tensor = torch.zeros(
+            max_num_tokens, dtype=torch.int32, device=device
+        )
+        self.group_key_idx: torch.Tensor = torch.zeros(
+            max_num_tokens, dtype=torch.int32, device=device
+        )
+        self.group_key_cache_idx: torch.Tensor = torch.zeros(
+            max_num_tokens, dtype=torch.int32, device=device
+        )
+
 
 @dataclass
 class AscendInputBatch(InputBatch):
@@ -71,6 +86,12 @@ class AscendInputBatch(InputBatch):
     seq_lens_np: np.ndarray
     # attn_state is used to build attention metadata.
     attn_state: AscendAttentionState | None = None
+    # Cross-layer (DSV4 compress) SFA buffers for the attention backend.
+    group_len: torch.Tensor | None = None
+    group_key_idx: torch.Tensor | None = None
+    group_key_cache_idx: torch.Tensor | None = None
+    # Per-token absolute positions on CPU for the DSA attention path.
+    positions_cpu: torch.Tensor | None = None
 
     @classmethod
     def make_dummy(
@@ -109,4 +130,8 @@ class AscendInputBatch(InputBatch):
             **asdict(input_batch),
             seq_lens_np=seq_lens_np,
             attn_state=AscendAttentionState.DecodeOnly,
+            group_len=input_buffers.group_len[:num_tokens],
+            group_key_idx=input_buffers.group_key_idx[:num_tokens],
+            group_key_cache_idx=input_buffers.group_key_cache_idx[:num_tokens],
+            positions_cpu=None,
         )
