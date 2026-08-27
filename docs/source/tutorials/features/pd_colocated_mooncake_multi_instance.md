@@ -193,8 +193,52 @@ The template for the mooncake.json file is as follows:
 | --------------| ------------------------| -----------------------------------|
 | metadata_server | P2PHANDSHAKE              | Point-to-point handshake mode  |
 | protocol              | ascend              | Ascend proprietary protocol    |
+| device_name           | "" (for example)   | Comma-separated NIC bond names bound to the Transfer Engine, e.g. `mlx5_bond_1,mlx5_bond_2`. An empty value means the engine selects devices automatically |
 | master_server_address | 90.90.100.188:50088(for example) | Master server address|
 | global_segment_size   | 107374182400    | Size per segment (100GB)      |
+
+## Bind NPU-NIC Topology with `MC_CUSTOM_TOPO_JSON`
+
+By default, Mooncake detects NPU-NIC affinity from the system topology. When
+auto-detection is inaccurate (e.g. bonded NICs or a complex PCIe topology), you
+can provide a custom topology file through the `MC_CUSTOM_TOPO_JSON` environment
+variable so that each NPU transfers data through its nearest NICs.
+
+1. Generate the topology file on both nodes:
+
+    ```shell
+    python tools/generate_topo.py
+    ```
+
+    The script probes `npu-smi info`, `mst status -v` and the PCI sysfs tree,
+    filters out storage NICs (auto-detected, or set manually via `EXCLUDE_BONDS`
+    in the script), and writes `mooncake_topo.json`:
+
+    ```json
+    {
+        "cpu:0": [["mlx5_bond_1", "mlx5_bond_2"], ["mlx5_bond_5", "mlx5_bond_6"]],
+        "cpu:1": [["mlx5_bond_5", "mlx5_bond_6"], ["mlx5_bond_1", "mlx5_bond_2"]],
+        "npu:0": [["mlx5_bond_1"], ["mlx5_bond_1"]],
+        "npu:1": [["mlx5_bond_2"], ["mlx5_bond_2"]]
+    }
+    ```
+
+    Each key is a memory location (`npu:<id>` or `cpu:<numa_node>`), and the
+    value is a two-element priority list of NIC bond names: the first list holds
+    the NICs nearest to the location, and the second list holds the fallback
+    NICs.
+
+2. Point `MC_CUSTOM_TOPO_JSON` to the generated file before starting vLLM:
+
+    ```shell
+    export MC_CUSTOM_TOPO_JSON=/path/to/mooncake_topo.json
+    ```
+
+!!! note
+
+    `device_name` in mooncake.json restricts the set of NICs the Transfer Engine
+    uses, while `MC_CUSTOM_TOPO_JSON` defines the NIC priority for each NPU.
+    They can be used together.
 
 ## vLLM Instance Deployment
 

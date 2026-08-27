@@ -1554,7 +1554,11 @@ class MooncakeConnectorWorker:
         device_index = self.pp_rank * self.tp_size + self.tp_rank
         self.handshake_port = self.side_channel_port + device_index
         self.sockets: dict = {}
-        self.engine = global_te.get_transfer_engine(self.side_channel_host, device_name=None)
+        self.engine = global_te.get_transfer_engine(
+            self.side_channel_host,
+            device_name=vllm_config.kv_transfer_config.get_from_extra_config("device_name", ""),
+            protocol=vllm_config.kv_transfer_config.get_from_extra_config("protocol", "ascend"),
+        )
         self.te_rpc_port = self.engine.get_rpc_port()
 
         # Background thread for sending or receiving KV caches.

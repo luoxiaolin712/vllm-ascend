@@ -140,6 +140,77 @@ Set environment variables.
 export LD_LIBRARY_PATH=/usr/local/lib64/python3.12/site-packages/mooncake:$LD_LIBRARY_PATH
 ```
 
+## Transfer Engine Configuration
+
+### `protocol` and `device_name`
+
+The transport protocol and NICs used by the Mooncake Transfer Engine can be
+configured through `kv_connector_extra_config`:
+
+| Parameter   | Default | Description                                                                                                                                                                                                    |
+| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| protocol    | ascend  | Transport protocol used by the Transfer Engine, e.g. `ascend`, `tcp`.                                                                                                                                          |
+| device_name | ""      | Comma-separated NIC bond names bound to the Transfer Engine, e.g. `mlx5_bond_1,mlx5_bond_2`. An empty value means the engine selects devices automatically.                                                      |
+
+Example:
+
+```shell
+--kv-transfer-config '{
+    "kv_connector": "MooncakeConnectorV1",
+    "kv_role": "kv_producer",
+    "kv_port": "30000",
+    "kv_connector_extra_config": {
+        "protocol": "ascend",
+        "device_name": "mlx5_bond_1,mlx5_bond_2"
+    }
+}'
+```
+
+### Bind NPU-NIC Topology with `MC_CUSTOM_TOPO_JSON`
+
+By default, Mooncake detects NPU-NIC affinity from the system topology. When
+auto-detection is inaccurate (e.g. bonded NICs or a complex PCIe topology), you
+can provide a custom topology file through the `MC_CUSTOM_TOPO_JSON` environment
+variable so that each NPU transfers data through its nearest NICs.
+
+1. Generate the topology file on the node:
+
+    ```shell
+    python tools/generate_topo.py
+    ```
+
+    The script probes `npu-smi info`, `mst status -v` and the PCI sysfs tree,
+    filters out storage NICs (auto-detected, or set manually via `EXCLUDE_BONDS`
+    in the script), and writes `mooncake_topo.json`:
+
+    ```json
+    {
+        "cpu:0": [["mlx5_bond_1", "mlx5_bond_2"], ["mlx5_bond_5", "mlx5_bond_6"]],
+        "cpu:1": [["mlx5_bond_5", "mlx5_bond_6"], ["mlx5_bond_1", "mlx5_bond_2"]],
+        "npu:0": [["mlx5_bond_1"], ["mlx5_bond_1"]],
+        "npu:1": [["mlx5_bond_2"], ["mlx5_bond_2"]]
+    }
+    ```
+
+    Each key is a memory location (`npu:<id>` or `cpu:<numa_node>`), and the
+    value is a two-element priority list of NIC bond names: the first list holds
+    the NICs nearest to the location, and the second list holds the fallback
+    NICs.
+
+2. Point `MC_CUSTOM_TOPO_JSON` to the generated file before starting vLLM:
+
+    ```shell
+    export MC_CUSTOM_TOPO_JSON=/path/to/mooncake_topo.json
+    ```
+
+!!! note
+
+    KV Cache buffers are registered with the location `npu:<npu_id>`, which is
+    looked up in this topology file to select the nearest NIC. `device_name` in
+    `kv_connector_extra_config` restricts the set of NICs the engine uses, while
+    `MC_CUSTOM_TOPO_JSON` defines the NIC priority for each NPU. They can be
+    used together.
+
 ## Prefiller/Decoder Deployment
 
 We can run the following scripts to launch a server on the prefiller/decoder NPU, respectively.
