@@ -30,6 +30,11 @@ from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_scheduler imp
     LookupKeyClient,
     get_zmq_rpc_path_lookup,
 )
+from vllm_ascend.distributed.kv_transfer.utils.utils import (
+    get_group_block_size,
+    get_group_family,
+    uses_hybrid_kv_cache,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -758,32 +763,27 @@ class TestKVPoolSchedulerStaticMethods(unittest.TestCase):
     """Test static helper methods."""
 
     def test_uses_hybrid_kv_cache_none(self):
-        self.assertFalse(KVPoolScheduler._uses_hybrid_kv_cache(MagicMock(), None))
+        self.assertFalse(uses_hybrid_kv_cache(MagicMock(), None))
 
     def test_uses_hybrid_kv_cache_disabled(self):
         vllm_config = MagicMock()
         vllm_config.scheduler_config.disable_hybrid_kv_cache_manager = True
         kv_cache_config = MagicMock()
         kv_cache_config.kv_cache_groups = [MagicMock()]
-        self.assertFalse(KVPoolScheduler._uses_hybrid_kv_cache(vllm_config, kv_cache_config))
+        self.assertFalse(uses_hybrid_kv_cache(vllm_config, kv_cache_config))
 
     def test_get_group_family_out_of_range(self):
-        self.assertEqual(KVPoolScheduler._get_group_family(None, ["a"], 5), "default")
+        self.assertEqual(get_group_family(["a"], 5), "default")
 
     def test_get_group_family_valid(self):
-        self.assertEqual(KVPoolScheduler._get_group_family(None, ["a", "b"], 1), "b")
+        self.assertEqual(get_group_family(["a", "b"], 1), "b")
 
     def test_get_group_block_size_out_of_range(self):
-        scheduler_mock = MagicMock()
-        scheduler_mock.grouped_block_size = [16, 32]
-        # Call unbound
-        result = KVPoolScheduler._get_group_block_size(scheduler_mock, 5)
+        result = get_group_block_size([16, 32], 5)
         self.assertEqual(result, 16)
 
     def test_get_group_block_size_valid(self):
-        scheduler_mock = MagicMock()
-        scheduler_mock.grouped_block_size = [16, 32]
-        result = KVPoolScheduler._get_group_block_size(scheduler_mock, 1)
+        result = get_group_block_size([16, 32], 1)
         self.assertEqual(result, 32)
 
 

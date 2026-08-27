@@ -18,7 +18,6 @@ from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.backend.backend im
 # isort: off
 from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.config_data import (
     ChunkedTokenDatabase,
-    infer_cache_family_ratio,
     LayerBatchReqMeta,
     LayerBlockRange,
     LayerLoadTask,
@@ -29,6 +28,7 @@ from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.config_data import
     get_block_hashes,
 )
 # isort: on
+from vllm_ascend.distributed.kv_transfer.utils.utils import infer_cache_family_ratio
 
 
 def _circular_shift(lst: list, offset: int) -> list:

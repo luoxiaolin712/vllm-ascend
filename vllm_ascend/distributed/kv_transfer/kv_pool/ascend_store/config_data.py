@@ -12,6 +12,7 @@ from vllm.utils.math_utils import cdiv
 from vllm.v1.core.kv_cache_utils import BlockHash, BlockHashList
 from vllm.v1.core.sched.output import NewRequestData
 
+from vllm_ascend.distributed.kv_transfer.utils.utils import infer_cache_family_ratio
 from vllm_ascend.memcache_comm_fence import AttentionComputeStartGate
 
 
@@ -169,87 +170,6 @@ class LayerPoolKey(PoolKey):
             f"@layer_id:{self.layer_id}"
             f"@{self.chunk_hash}"
         )
-
-
-def infer_cache_family_from_ratio(compress_ratio: int | None) -> str:
-    if compress_ratio is None:
-        return "default"
-    if compress_ratio <= 1:
-        return "c1"
-    return f"c{compress_ratio}"
-
-
-def infer_cache_family_ratio(cache_family: str | None) -> int:
-    if not cache_family or not cache_family.startswith("c"):
-        return 1
-    ratio = cache_family[1:]
-    return int(ratio) if ratio.isdigit() else 1
-
-
-def get_cache_family_granularity(block_size: int, cache_family: str | None) -> int:
-    return block_size * infer_cache_family_ratio(cache_family)
-
-
-def _get_layer_compress_ratio(
-    layer_name: str,
-    compress_ratios: Sequence[int] | None,
-    hf_config: Any | None = None,
-) -> int | None:
-    if compress_ratios is None:
-        return None
-    if getattr(hf_config, "model_type", None) == "deepseek_v4":
-        from vllm_ascend.utils import extract_dsv4_layer_index, get_dsv4_compress_ratio
-
-        return get_dsv4_compress_ratio(hf_config, extract_dsv4_layer_index(hf_config, layer_name))
-    from vllm.model_executor.models.utils import extract_layer_index
-
-    return compress_ratios[extract_layer_index(layer_name)]
-
-
-def _get_group_spec_ratios(group: object) -> set[int | None]:
-    kv_cache_spec = getattr(group, "kv_cache_spec", None)
-    if kv_cache_spec is None:
-        return set()
-    kv_cache_specs = getattr(kv_cache_spec, "kv_cache_specs", None)
-    if kv_cache_specs is not None:
-        return {getattr(spec, "compress_ratio", None) for spec in kv_cache_specs.values()}
-    return {getattr(kv_cache_spec, "compress_ratio", None)}
-
-
-def infer_group_cache_families(
-    kv_cache_groups: Sequence[object] | None,
-    compress_ratios: Sequence[int] | None,
-    hf_config: Any | None = None,
-) -> list[str]:
-    if kv_cache_groups is None:
-        return ["default"]
-
-    families: list[str] = []
-    for group in kv_cache_groups:
-        spec_ratios = _get_group_spec_ratios(group)
-        if len(spec_ratios) == 1:
-            families.append(infer_cache_family_from_ratio(next(iter(spec_ratios))))
-            continue
-        if len(spec_ratios) > 1:
-            families.append("mixed")
-            continue
-
-        layer_names = list(getattr(group, "layer_names", []))
-        if compress_ratios is None or not layer_names:
-            families.append("default")
-            continue
-
-        group_ratios = {_get_layer_compress_ratio(layer_name, compress_ratios, hf_config) for layer_name in layer_names}
-        if len(group_ratios) == 1:
-            families.append(infer_cache_family_from_ratio(next(iter(group_ratios))))
-        else:
-            logger.debug(
-                "KV cache group has mixed layer compress ratios %s for layers %s; using mixed cache family.",
-                sorted(group_ratios, key=lambda ratio: -1 if ratio is None else ratio),
-                layer_names,
-            )
-            families.append("mixed")
-    return families
 
 
 class ChunkedTokenDatabase:

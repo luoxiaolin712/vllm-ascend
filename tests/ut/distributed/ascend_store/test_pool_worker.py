@@ -30,6 +30,8 @@ from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.config_data import
     SharedBlockData,
 )
 
+from vllm_ascend.distributed.kv_transfer.utils.utils import get_group_block_size
+
 
 class TestKVPoolWorkerHelpers(unittest.TestCase):
     """Test the pure helper methods on KVPoolWorker without full init."""
@@ -830,18 +832,18 @@ class TestKVPoolWorkerStaticHelpers(unittest.TestCase):
     """Test static and standalone helper methods."""
 
     def test_uses_hybrid_kv_cache_none_config(self):
-        from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_worker import KVPoolWorker
+        from vllm_ascend.distributed.kv_transfer.utils.utils import uses_hybrid_kv_cache
 
-        self.assertFalse(KVPoolWorker._uses_hybrid_kv_cache(MagicMock(), None))
+        self.assertFalse(uses_hybrid_kv_cache(MagicMock(), None))
 
     def test_uses_hybrid_kv_cache_disabled(self):
-        from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_worker import KVPoolWorker
+        from vllm_ascend.distributed.kv_transfer.utils.utils import uses_hybrid_kv_cache
 
         vllm_config = MagicMock()
         vllm_config.scheduler_config.disable_hybrid_kv_cache_manager = True
         kv_cache_config = MagicMock()
         kv_cache_config.kv_cache_groups = [MagicMock()]
-        self.assertFalse(KVPoolWorker._uses_hybrid_kv_cache(vllm_config, kv_cache_config))
+        self.assertFalse(uses_hybrid_kv_cache(vllm_config, kv_cache_config))
 
     def test_uses_mamba_kv_cache_false_when_not_hybrid(self):
         from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_worker import KVPoolWorker
@@ -869,14 +871,14 @@ class TestKVPoolWorkerStaticHelpers(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
     def test_get_group_family_out_of_range(self):
-        from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_worker import KVPoolWorker
+        from vllm_ascend.distributed.kv_transfer.utils.utils import get_group_family
 
-        self.assertEqual(KVPoolWorker._get_group_family(["a", "b"], 5), "default")
+        self.assertEqual(get_group_family(["a", "b"], 5), "default")
 
     def test_get_group_family_valid(self):
-        from vllm_ascend.distributed.kv_transfer.kv_pool.ascend_store.pool_worker import KVPoolWorker
+        from vllm_ascend.distributed.kv_transfer.utils.utils import get_group_family
 
-        self.assertEqual(KVPoolWorker._get_group_family(["a", "b"], 1), "b")
+        self.assertEqual(get_group_family(["a", "b"], 1), "b")
 
 
 class TestKVPoolWorkerGetBlockIdsWithLoadErrors(unittest.TestCase):
@@ -1321,7 +1323,7 @@ class TestKVPoolWorkerInferGroupMethods(unittest.TestCase):
 
         worker = KVPoolWorker(config, use_layerwise=False)
         # group_id out of range returns first element
-        self.assertEqual(worker._get_group_block_size(5), 16)
+        self.assertEqual(get_group_block_size(worker.grouped_block_size, 5), 16)
 
         for p in patches.values():
             p.stop()

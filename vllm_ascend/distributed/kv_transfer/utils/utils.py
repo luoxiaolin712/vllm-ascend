@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import math
 import os
 from collections import OrderedDict, defaultdict
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
 import torch
 import torch.distributed as dist
 from vllm.logger import logger
+from vllm.v1.kv_cache_interface import FullAttentionSpec, UniformTypeKVCacheSpecs
 
 from vllm_ascend.distributed.parallel_state import get_p_tp_group
 
@@ -443,3 +446,171 @@ def validate_register_region_count(regions: RegisterRegions) -> None:
         "Please reduce KV cache allocation fragmentation or merge "
         "k/v/dsa/scale allocations further."
     )
+
+
+def infer_cache_family_from_ratio(compress_ratio: int | None) -> str:
+    if compress_ratio is None:
+        return "default"
+    if compress_ratio <= 1:
+        return "c1"
+    return f"c{compress_ratio}"
+
+
+def infer_cache_family_ratio(cache_family: str | None) -> int:
+    if not cache_family or not cache_family.startswith("c"):
+        return 1
+    ratio = cache_family[1:]
+    return int(ratio) if ratio.isdigit() else 1
+
+
+def get_cache_family_granularity(block_size: int, cache_family: str | None) -> int:
+    return block_size * infer_cache_family_ratio(cache_family)
+
+
+def _get_layer_compress_ratio(
+    layer_name: str,
+    compress_ratios: Sequence[int] | None,
+    hf_config: Any | None = None,
+) -> int | None:
+    if compress_ratios is None:
+        return None
+    if getattr(hf_config, "model_type", None) == "deepseek_v4":
+        from vllm_ascend.utils import extract_dsv4_layer_index, get_dsv4_compress_ratio
+
+        return get_dsv4_compress_ratio(hf_config, extract_dsv4_layer_index(hf_config, layer_name))
+    from vllm.model_executor.models.utils import extract_layer_index
+
+    return compress_ratios[extract_layer_index(layer_name)]
+
+
+def _get_group_spec_ratios(group: object) -> set[int | None]:
+    kv_cache_spec = getattr(group, "kv_cache_spec", None)
+    if kv_cache_spec is None:
+        return set()
+    kv_cache_specs = getattr(kv_cache_spec, "kv_cache_specs", None)
+    if kv_cache_specs is not None:
+        return {getattr(spec, "compress_ratio", None) for spec in kv_cache_specs.values()}
+    return {getattr(kv_cache_spec, "compress_ratio", None)}
+
+
+def infer_group_cache_families(
+    kv_cache_groups: Sequence[object] | None,
+    compress_ratios: Sequence[int] | None,
+    hf_config: Any | None = None,
+) -> list[str]:
+    if kv_cache_groups is None:
+        return ["default"]
+
+    families: list[str] = []
+    for group in kv_cache_groups:
+        spec_ratios = _get_group_spec_ratios(group)
+        if len(spec_ratios) == 1:
+            families.append(infer_cache_family_from_ratio(next(iter(spec_ratios))))
+            continue
+        if len(spec_ratios) > 1:
+            families.append("mixed")
+            continue
+
+        layer_names = list(getattr(group, "layer_names", []))
+        if compress_ratios is None or not layer_names:
+            families.append("default")
+            continue
+
+        group_ratios = {_get_layer_compress_ratio(layer_name, compress_ratios, hf_config) for layer_name in layer_names}
+        if len(group_ratios) == 1:
+            families.append(infer_cache_family_from_ratio(next(iter(group_ratios))))
+        else:
+            logger.debug(
+                "KV cache group has mixed layer compress ratios %s for layers %s; using mixed cache family.",
+                sorted(group_ratios, key=lambda ratio: -1 if ratio is None else ratio),
+                layer_names,
+            )
+            families.append("mixed")
+    return families
+
+
+def resolve_hf_configs(vllm_config: Any) -> tuple[Any, Sequence[int] | None]:
+    """Resolve (hf_config, compress_ratios) from a vllm_config."""
+    model_config = vllm_config.model_config
+    hf_text_config = getattr(model_config, "hf_text_config", None)
+    hf_config = getattr(model_config, "hf_config", hf_text_config)
+    resolved_hf_config = hf_text_config or hf_config
+    compress_ratios = getattr(hf_text_config, "compress_ratios", None)
+    if compress_ratios is None:
+        compress_ratios = getattr(hf_config, "compress_ratios", None)
+    return resolved_hf_config, compress_ratios
+
+
+def uses_hybrid_kv_cache(vllm_config: Any, kv_cache_config: Any | None) -> bool:
+    if kv_cache_config is None:
+        return False
+    if getattr(vllm_config.scheduler_config, "disable_hybrid_kv_cache_manager", False):
+        return False
+    return len(kv_cache_config.kv_cache_groups) > 1 and any(
+        not isinstance(group.kv_cache_spec, FullAttentionSpec) for group in kv_cache_config.kv_cache_groups
+    )
+
+
+def infer_group_block_sizes(vllm_config: Any, kv_cache_config: Any | None, use_hybrid: bool) -> list[int]:
+    if kv_cache_config is None or not use_hybrid:
+        return [vllm_config.cache_config.block_size]
+
+    block_sizes: list[int] = []
+    for kv_cache_group in kv_cache_config.kv_cache_groups:
+        kv_cache_spec = kv_cache_group.kv_cache_spec
+        if isinstance(kv_cache_spec, UniformTypeKVCacheSpecs):
+            kv_cache_spec = next(iter(kv_cache_spec.kv_cache_specs.values()))
+        block_sizes.append(kv_cache_spec.block_size)
+    return block_sizes
+
+
+def infer_block_size_topology(
+    vllm_config: Any,
+    kv_cache_config: Any | None,
+    use_hybrid: bool,
+    pcp_size: int,
+    dcp_size: int,
+) -> tuple[list[int], list[int], int, int]:
+    """Derive (original_block_size, grouped_block_size, hash_block_size, lcm_block_size)."""
+    original_block_size = infer_group_block_sizes(vllm_config, kv_cache_config, use_hybrid)
+    cp_scale = pcp_size * dcp_size
+    grouped_block_size = [block_size * cp_scale for block_size in original_block_size]
+    requested_hash_block_size = vllm_config.cache_config.prefix_match_unit
+    if not isinstance(requested_hash_block_size, int):
+        requested_hash_block_size = None
+    hash_block_size = (
+        requested_hash_block_size if requested_hash_block_size is not None else min(original_block_size)
+    ) * cp_scale
+    for group_block_size in grouped_block_size:
+        assert group_block_size % hash_block_size == 0, "block_size must be divisible by hash_block_size"
+    lcm_block_size = math.lcm(*grouped_block_size)
+    return original_block_size, grouped_block_size, hash_block_size, lcm_block_size
+
+
+def get_group_block_size(grouped_block_size: Sequence[int], group_id: int) -> int:
+    if group_id >= len(grouped_block_size):
+        return grouped_block_size[0]
+    return grouped_block_size[group_id]
+
+
+def get_group_family(families: Sequence[str], group_id: int) -> str:
+    if group_id >= len(families):
+        return "default"
+    return families[group_id]
+
+
+def get_effective_group_block_size(grouped_block_size: Sequence[int], families: Sequence[str], group_id: int) -> int:
+    cache_family = get_group_family(families, group_id)
+    return get_group_block_size(grouped_block_size, group_id) * max(infer_cache_family_ratio(cache_family), 1)
+
+
+def infer_cache_transfer_granularity(grouped_block_size: Sequence[int], families: Sequence[str]) -> int:
+    granularities = [math.lcm(*grouped_block_size)]
+    for group_id in range(len(grouped_block_size)):
+        granularities.append(
+            get_cache_family_granularity(
+                get_group_block_size(grouped_block_size, group_id),
+                get_group_family(families, group_id),
+            )
+        )
+    return math.lcm(*granularities)
