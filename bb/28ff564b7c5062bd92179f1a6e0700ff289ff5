@@ -1,0 +1,21 @@
+tests/ut/distributed/ascend_store/test_layerwise_cache_layout.py
+  s_b1c9f86e764860::t_c6ab7b81692c2d 84-110
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/layerwise_cache_layout.py
+  s_b1c9f86e764860::t_da2acdba4fc696 14,222-234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "bb28ff564b7c5062bd92179f1a6e0700ff289ff5",
+  "prompts": {},
+  "sessions": {
+    "s_b1c9f86e764860": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9e63439843e86442f894ee",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>"
+    }
+  }
+}
