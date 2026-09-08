@@ -2,6 +2,7 @@ docs/source/user_guide/feature_guide/kv_pool.md
   h_0f9f6044b9af38 36
   s_2a2c23a3913357::t_1585403d643044 1619
   s_2a2c23a3913357::t_5627a936506222 1631,1634-1635
+  s_2a2c23a3913357::t_362847e2adb977 1614-1618,1620-1623
 vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_layerwise_connector.py
   s_2a2c23a3913357::t_0a97db48f458f6 1234
 tests/ut/distributed/ascend_store/test_backend.py
@@ -43,17 +44,17 @@ vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/mooncake_backen
       },
       "human_author": "lty <linhebiwen@gmail.com>",
       "custom_attributes": {
-        "external_session_id": "6a9f68969843e86442f896d2",
-        "edit_kind": "file_edit",
-        "runtime_client": "trae-tob-git-ai",
-        "tool_type": "agent",
-        "session_id": "6a9f68969843e86442f896d2",
         "tool_id": "Edit",
-        "dedupe_key": "6a9f68969843e86442f896d2:6a9fb49a9843e86442f89a5e:afterEdit:7fb46c2a",
         "source_scene": "unknown",
+        "dedupe_key": "6a9f68969843e86442f896d2:6a9fb49a9843e86442f89a5e:afterEdit:7fb46c2a",
         "client_type": "ide",
+        "runtime_client": "trae-tob-git-ai",
         "tool_use_id": "6a9fb49a9843e86442f89a5e",
-        "operation_id": "6a9fb49a9843e86442f89a5e"
+        "operation_id": "6a9fb49a9843e86442f89a5e",
+        "edit_kind": "file_edit",
+        "external_session_id": "6a9f68969843e86442f896d2",
+        "session_id": "6a9f68969843e86442f896d2",
+        "tool_type": "agent"
       }
     }
   }
