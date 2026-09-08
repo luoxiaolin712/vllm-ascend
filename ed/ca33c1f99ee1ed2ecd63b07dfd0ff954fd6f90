@@ -1,0 +1,37 @@
+docs/source/user_guide/feature_guide/kv_pool.md
+  s_2a2c23a3913357::t_76e3f120bd399c 36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "edca33c1f99ee1ed2ecd63b07dfd0ff954fd6f90",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2a2c23a3913357": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9f68969843e86442f896d2",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "runtime_client": "trae-tob-git-ai",
+        "client_type": "ide",
+        "dedupe_key": "6a9f68969843e86442f896d2:6a9f7eab9843e86442f898f4:afterEdit:fe625b7f",
+        "tool_use_id": "6a9f7eab9843e86442f898f4",
+        "edit_kind": "file_edit",
+        "operation_id": "6a9f7eab9843e86442f898f4",
+        "external_session_id": "6a9f68969843e86442f896d2",
+        "source_scene": "unknown",
+        "tool_type": "agent",
+        "session_id": "6a9f68969843e86442f896d2",
+        "tool_id": "Edit"
+      }
+    }
+  }
+}
