@@ -1,0 +1,65 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/mooncake_backend.py
+  s_2a2c23a3913357::t_5fa58fb92968f1 106-108,114,118-155
+  s_2a2c23a3913357::t_4cc01da9c4cd4f 105,109-113,115-117
+  s_2a2c23a3913357::t_5d9a089cce88f2 162
+  s_2a2c23a3913357::t_b1c9cbaf32d1ed 23
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/memcache_backend.py
+  s_2a2c23a3913357::t_b2fee93b40a653 142-143,147,151-161
+  s_2a2c23a3913357::t_c957b346b665ca 141,144-146,148-150
+  s_2a2c23a3913357::t_4a2e6f39d4fb98 17
+  s_2a2c23a3913357::t_e7e11f00e5342c 170
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/base.py
+  s_2a2c23a3913357::t_43d270bb196cf3 14-32
+  s_2a2c23a3913357::t_b2cc8cd5a66be2 33-56
+tests/ut/distributed/ascend_store/test_backend.py
+  s_2a2c23a3913357::t_1a3392eb706e09 33-36,39,51
+  s_2a2c23a3913357::t_7e7ec07682b46f 24
+  s_2a2c23a3913357::t_01ef5e4b003f62 634,642
+  s_2a2c23a3913357::t_cd42a3e90ac046 706-710
+  s_2a2c23a3913357::t_1d0eb5a82cfa1c 630-633,635-636,638,640,645
+  s_2a2c23a3913357::t_b659eb7718fa29 689,699
+  s_2a2c23a3913357::t_b867fcd2df25c5 602-621,649-653,658,661-664,670-676,679-688,691,693-698,701,703-705,712-717,719-720,722-727,729-730,732-740,742,748-758,763,766,772-775,778,780-785,788,790-795,797,800-801
+  s_2a2c23a3913357::t_5544f5e0c6daeb 776,786
+  s_2a2c23a3913357::t_d574b0dbb1521f 759-762,764-765,767-771,777,779,787,789,796,798
+  s_2a2c23a3913357::t_71373db53c800d 654-657,659-660,665-669,677-678,690,692,700,702,711,718,721,728,731,741,743
+  s_2a2c23a3913357::t_9868added2a63d 744-747
+  s_2a2c23a3913357::t_283a0899296ad2 799
+  s_2a2c23a3913357::t_d3290be2c9e5cb 622-629,637,639,641,643-644,646-648
+  s_2a2c23a3913357::t_d4b5dd90a69249 31-32
+docs/source/user_guide/feature_guide/kv_pool.md
+  s_2a2c23a3913357::t_cfed58a84b341d 1386-1395,1398-1399,1402-1412
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "7a22876f943d675f2b11adf45870ff81374a4945",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2a2c23a3913357": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9f68969843e86442f896d2",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "tool_type": "agent",
+        "client_type": "ide",
+        "operation_id": "6a9f766c9843e86442f89889",
+        "dedupe_key": "6a9f68969843e86442f896d2:6a9f766c9843e86442f89889:afterEdit:8ce2b0e2",
+        "source_scene": "unknown",
+        "edit_kind": "file_edit",
+        "runtime_client": "trae-tob-git-ai",
+        "session_id": "6a9f68969843e86442f896d2",
+        "external_session_id": "6a9f68969843e86442f896d2",
+        "tool_use_id": "6a9f766c9843e86442f89889",
+        "tool_id": "Edit"
+      }
+    }
+  }
+}
