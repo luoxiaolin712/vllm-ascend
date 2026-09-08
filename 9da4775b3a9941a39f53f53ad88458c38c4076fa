@@ -1,0 +1,38 @@
+vllm_ascend/ops/kimi_kda.py
+  s_b1c9f86e764860::t_6f760341c0ee31 769-773
+  s_b1c9f86e764860::t_7a1d46682679b0 551-556
+  s_b1c9f86e764860::t_08d8686a9cd88f 30-36
+  s_b1c9f86e764860::t_51eb497173e12c 732-734
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/layerwise_cache_layout.py
+  s_b1c9f86e764860::t_66829dfd0b0049 14,222-234
+tests/ut/distributed/ascend_store/test_layerwise_cache_layout.py
+  s_b1c9f86e764860::t_66829dfd0b0049 84-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "9da4775b3a9941a39f53f53ad88458c38c4076fa",
+  "prompts": {},
+  "sessions": {
+    "s_b1c9f86e764860": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9e63439843e86442f894ee",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "client_type": "ide",
+        "source_scene": "agent",
+        "runtime_client": "trae-tob-git-ai",
+        "tool_use_id": "6a9e64529843e86442f89554",
+        "session_id": "6a9e63439843e86442f894ee",
+        "operation_id": "6a9e64529843e86442f89554",
+        "tool_name": "RunCommand",
+        "display_model_name": "GLM-5.3",
+        "external_session_id": "6a9e63439843e86442f894ee",
+        "edit_kind": "bash"
+      }
+    }
+  }
+}
