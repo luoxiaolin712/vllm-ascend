@@ -1,0 +1,36 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_scheduler.py
+  s_51dfb7c6fffea0::t_aada14e3401fef 508
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "4da5c04b7ccbda8aaa3e0c134441215f27969851",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_51dfb7c6fffea0": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9fcafd9843e86442f89b89",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "client_type": "ide",
+        "edit_kind": "file_edit",
+        "tool_name": "Edit",
+        "external_session_id": "6a9fcafd9843e86442f89b89",
+        "source_scene": "agent",
+        "session_id": "6a9fcafd9843e86442f89b89",
+        "runtime_client": "trae-tob-git-ai",
+        "operation_id": "6aa1036d9843e86442f8a1a7",
+        "tool_use_id": "6aa1036d9843e86442f8a1a7",
+        "display_model_name": "GLM-5.3"
+      }
+    }
+  }
+}
