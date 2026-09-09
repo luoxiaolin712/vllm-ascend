@@ -1,0 +1,37 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_scheduler.py
+  s_51dfb7c6fffea0::t_7786d48e557f7d 508
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "8de6bba0e9828602e53c4fc4ce910220c69da4ae",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_51dfb7c6fffea0": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9fcafd9843e86442f89b89",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "external_session_id": "6a9fcafd9843e86442f89b89",
+        "session_id": "6a9fcafd9843e86442f89b89",
+        "operation_id": "6aa101c99843e86442f8a195",
+        "dedupe_key": "6a9fcafd9843e86442f89b89:6aa101c99843e86442f8a195:afterEdit:5dc9e78e",
+        "tool_type": "agent",
+        "source_scene": "unknown",
+        "tool_use_id": "6aa101c99843e86442f8a195",
+        "client_type": "ide",
+        "runtime_client": "trae-tob-git-ai",
+        "edit_kind": "file_edit",
+        "tool_id": "Edit"
+      }
+    }
+  }
+}
