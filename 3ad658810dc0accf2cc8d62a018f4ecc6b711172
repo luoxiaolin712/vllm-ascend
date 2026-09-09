@@ -1,0 +1,48 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/base.py
+  s_67fc20933684e7::t_c60b349d0e0105 53-56
+docs/source/user_guide/feature_guide/kv_pool.md
+  h_0f9f6044b9af38 1624,1627
+  s_2a2c23a3913357::t_858c8b557928d6 1601,1614-1615
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "3ad658810dc0accf2cc8d62a018f4ecc6b711172",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2a2c23a3913357": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9f68969843e86442f896d2",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>"
+    },
+    "s_67fc20933684e7": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9fcab09843e86442f89b88",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "source_scene": "unknown",
+        "runtime_client": "trae-tob-git-ai",
+        "session_id": "6a9fcab09843e86442f89b88",
+        "tool_type": "agent",
+        "operation_id": "6aa0c6d89843e86442f8a06e",
+        "edit_kind": "file_edit",
+        "client_type": "ide",
+        "external_session_id": "6a9fcab09843e86442f89b88",
+        "tool_id": "Edit",
+        "tool_use_id": "6aa0c6d89843e86442f8a06e",
+        "dedupe_key": "6a9fcab09843e86442f89b88:6aa0c6d89843e86442f8a06e:afterEdit:fe625b7f"
+      }
+    }
+  }
+}

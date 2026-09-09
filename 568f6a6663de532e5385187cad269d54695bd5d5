@@ -1,0 +1,59 @@
+vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_layerwise_connector.py
+  s_82fffe01be2fcb::t_f2a1e8194bba3c 1232-1236
+vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_hybrid_connector.py
+  s_82fffe01be2fcb::t_8c4b5f4b06d8f9 1557-1561
+tests/ut/distributed/mooncake/test_mooncake_transfer_engine.py
+  s_82fffe01be2fcb::t_efe49c999b7d21 8-9,19,21,27,32-35,39,49-51
+  h_5589d24d3c831f 10
+  s_82fffe01be2fcb::t_fbedf8fa1412e0 1-7,11-18,20,22-26,28-31,36-38,40-48,52-84,108-109
+  s_82fffe01be2fcb::t_3c7632fd11e5e7 85-107
+vllm_ascend/distributed/kv_transfer/utils/mooncake_transfer_engine.py
+  s_82fffe01be2fcb::t_ac2d587b598dda 52-54,56
+  s_82fffe01be2fcb::t_f54f2c394307bd 4,6-7,16-19,21
+  h_5589d24d3c831f 5,20
+  s_82fffe01be2fcb::t_853c503fccbc77 3
+  s_82fffe01be2fcb::t_66782549dca226 36-42
+tools/generate_topo.py
+  h_5589d24d3c831f 33-36,41,43,45,47-49,51-54,56,58-59,62,65-71,73,76,79-85,90-93,98-106,112-120,122-123,125-127,129-132,134-136,138-140,143-144,146-147,149,152,154-155,159-160,163,165-166,168-170,172-179,181-182,184-187,189-191,193,198-201
+  s_82fffe01be2fcb::t_621844ee33126e 1-32,37-40,42,44,46,50,55,57,60-61,63-64,72,74-75,77-78,86-89,94-97,107-111,121,124,128,133,137,141-142,145,148,150-151,153,156-158,161-162,164,167,171,180,183,188,192,194-197
+docs/source/tutorials/features/pd_disaggregation_mooncake_single_node.md
+  s_82fffe01be2fcb::t_b59e9a67d8f742 143-213
+docs/source/tutorials/features/pd_colocated_mooncake_multi_instance.md
+  s_82fffe01be2fcb::t_a4449d40f17c3a 196,200-242
+vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_connector.py
+  h_5589d24d3c831f 2121-2122,2126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "568f6a6663de532e5385187cad269d54695bd5d5",
+  "prompts": {},
+  "humans": {
+    "h_5589d24d3c831f": {
+      "author": "luoxiaolin712 <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_82fffe01be2fcb": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a8f9d580c75733a8b7a84e4",
+        "model": "glm-5.3"
+      },
+      "human_author": "luoxiaolin712 <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "runtime_client": "trae-tob-git-ai",
+        "edit_kind": "file_edit",
+        "dedupe_key": "6a8f9d580c75733a8b7a84e4:6a8fb2df0c75733a8b7a8753:afterEdit:fbd8db8e",
+        "operation_id": "6a8fb2df0c75733a8b7a8753",
+        "external_session_id": "6a8f9d580c75733a8b7a84e4",
+        "tool_id": "icube:applyChatSnapshotPatch",
+        "tool_type": "builtin",
+        "source_scene": "agent",
+        "session_id": "6a8f9d580c75733a8b7a84e4",
+        "tool_use_id": "6a8fb2df0c75733a8b7a8753",
+        "client_type": "ide"
+      }
+    }
+  }
+}
