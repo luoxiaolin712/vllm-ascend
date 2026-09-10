@@ -1,0 +1,37 @@
+vllm_ascend/patch/platform/__init__.py
+  s_a88db7cc03ad59::t_1367d2ea828e6a 52
+vllm_ascend/patch/__init__.py
+  s_a88db7cc03ad59::t_b7071ed189d394 129
+  s_a88db7cc03ad59::t_a450c5bed092a5 130-160
+vllm_ascend/patch/platform/patch_defer_block_free_schedule.py
+  s_a88db7cc03ad59::t_46f1ba1053918c 1-854,856-864
+  s_a88db7cc03ad59::t_34934233436f0a 855
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "431152569b6494046f1fc04b2fef5f95832df63f",
+  "prompts": {},
+  "sessions": {
+    "s_a88db7cc03ad59": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6aa285749843e86442f8a9e7",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "operation_id": "6aa295349843e86442f8abe5",
+        "tool_use_id": "6aa295349843e86442f8abe5",
+        "edit_kind": "bash",
+        "runtime_client": "trae-tob-git-ai",
+        "source_scene": "agent",
+        "display_model_name": "GLM-5.3",
+        "session_id": "6aa285749843e86442f8a9e7",
+        "client_type": "ide",
+        "tool_name": "RunCommand",
+        "external_session_id": "6aa285749843e86442f8a9e7"
+      }
+    }
+  }
+}
