@@ -1,0 +1,77 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/kv_transfer.py
+  s_8e6fcf95d6b781::t_6d75cd26985146 1985
+  s_8cb5157134ac26::t_f509b46bddb1c7 109-117,512,1638-1659,1694-1695,1742-1747
+  s_8e6fcf95d6b781::t_e9e78297f17c9a 1708
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_worker.py
+  s_8cb5157134ac26::t_4cf3138f3cdf5f 49,532,2135-2138,2233-2239,2243-2246
+tests/ut/distributed/ascend_store/test_mooncake_layerwise.py
+  s_8cb5157134ac26::t_4dd0e2a3efa331 267,273
+  s_8cb5157134ac26::t_b0a76206780a83 294
+  s_8cb5157134ac26::t_47820e11fc8d76 164-228,230-235,237-249,251-266,268-272,274-285,287-288,293,295-299,301-303
+  s_8cb5157134ac26::t_5bb4413149aba9 29
+  s_8cb5157134ac26::t_1178cecc6957dc 250
+  s_8cb5157134ac26::t_653a378b739d73 286,289-292,300
+  s_8cb5157134ac26::t_d48c9286d27729 229,236
+tests/ut/distributed/ascend_store/test_pool_worker.py
+  s_8cb5157134ac26::t_6e7e618eb445d7 1681-1682,1688
+  s_8cb5157134ac26::t_8b32c6ba5d22ba 26
+  s_8cb5157134ac26::t_20d61f694cc8ca 1605-1662,1674-1680,1683-1687,1689-1706
+  s_8cb5157134ac26::t_d17a7b4e1f4796 1663-1673
+tests/ut/distributed/ascend_store/test_pool_scheduler.py
+  s_8cb5157134ac26::t_508c6b20a2d607 102-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "8ffbeccfb8a6035dfb6efde9302eb7c059626130",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_8cb5157134ac26": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6aa50eca19cbfcc8dc6f0cdd",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "session_id": "6aa50eca19cbfcc8dc6f0cdd",
+        "tool_use_id": "6aa7c54f19cbfcc8dc6f1cc7",
+        "source_scene": "unknown",
+        "tool_id": "Edit",
+        "runtime_client": "trae-tob-git-ai",
+        "external_session_id": "6aa50eca19cbfcc8dc6f0cdd",
+        "client_type": "ide",
+        "operation_id": "6aa7c54f19cbfcc8dc6f1cc7",
+        "edit_kind": "file_edit",
+        "tool_type": "agent",
+        "dedupe_key": "6aa50eca19cbfcc8dc6f0cdd:6aa7c54f19cbfcc8dc6f1cc7:afterEdit:8e96f70a"
+      }
+    },
+    "s_8e6fcf95d6b781": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6aa508df19cbfcc8dc6f0c74",
+        "model": "kimi-k3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "tool_id": "SearchReplace",
+        "operation_id": "6aa50ab619cbfcc8dc6f0cc4",
+        "dedupe_key": "6aa508df19cbfcc8dc6f0c74:6aa50ab619cbfcc8dc6f0cc4:afterEdit:be601003",
+        "client_type": "ide",
+        "external_session_id": "6aa508df19cbfcc8dc6f0c74",
+        "edit_kind": "file_edit",
+        "session_id": "6aa508df19cbfcc8dc6f0c74",
+        "runtime_client": "trae-tob-git-ai",
+        "tool_use_id": "6aa50ab619cbfcc8dc6f0cc4",
+        "source_scene": "unknown",
+        "tool_type": "agent"
+      }
+    }
+  }
+}
