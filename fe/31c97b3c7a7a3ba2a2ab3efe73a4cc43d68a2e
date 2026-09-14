@@ -1,0 +1,59 @@
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/kv_transfer.py
+  s_8e6fcf95d6b781::t_6d75cd26985146 1985
+  s_8e6fcf95d6b781::t_e9e78297f17c9a 1708
+  s_8cb5157134ac26::t_f509b46bddb1c7 109-117,512,1638-1659,1694-1695,1742-1747
+vllm_ascend/attention/mla_v1.py
+  s_8cb5157134ac26::t_6ed9a4a9219c09 103
+vllm_ascend/distributed/kv_transfer/ascend_multi_connector.py
+  s_8cb5157134ac26::t_eafbace9fd30ba 32-34,88-92,94-101,104-108,112-117
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/ascend_store_connector.py
+  s_8cb5157134ac26::t_614c964aadd46f 127-129,277-293,296-300,304-309
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_scheduler.py
+  s_8cb5157134ac26::t_69b59f68a3f589 185
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_worker.py
+  s_8cb5157134ac26::t_4cf3138f3cdf5f 49,187,534,2137-2140,2235-2241,2245-2248
+vllm_ascend/worker/v2/model_states/mamba_hybrid.py
+  s_8cb5157134ac26::t_a6ed651e322a8f 19,25-26,28,33-36,43-63,71-76,79-249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "fe31c97b3c7a7a3ba2a2ab3efe73a4cc43d68a2e",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_8cb5157134ac26": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6aa50eca19cbfcc8dc6f0cdd",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>"
+    },
+    "s_8e6fcf95d6b781": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6aa508df19cbfcc8dc6f0c74",
+        "model": "kimi-k3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "session_id": "6aa508df19cbfcc8dc6f0c74",
+        "tool_id": "SearchReplace",
+        "tool_use_id": "6aa50ab619cbfcc8dc6f0cc4",
+        "dedupe_key": "6aa508df19cbfcc8dc6f0c74:6aa50ab619cbfcc8dc6f0cc4:afterEdit:be601003",
+        "operation_id": "6aa50ab619cbfcc8dc6f0cc4",
+        "external_session_id": "6aa508df19cbfcc8dc6f0c74",
+        "tool_type": "agent",
+        "client_type": "ide",
+        "source_scene": "unknown",
+        "runtime_client": "trae-tob-git-ai",
+        "edit_kind": "file_edit"
+      }
+    }
+  }
+}
