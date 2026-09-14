@@ -1,0 +1,51 @@
+tests/ut/distributed/ascend_store/test_backend.py
+  s_67fc20933684e7::t_87ea08850edca1 24
+  s_67fc20933684e7::t_b8a08c8c0c982c 623-624,631-632,639-640,649-650,663,672,680,689,698,709,717-733,743-744,748-749,757,766,774
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/pool_worker.py
+  s_67fc20933684e7::t_13d8fa8b508dd6 330-332
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/yuanrong_backend.py
+  s_67fc20933684e7::t_ff418e957198fd 56-60
+  h_0f9f6044b9af38 61-62
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/mooncake_backend.py
+  s_67fc20933684e7::t_f3c693783a9a14 158-164,169
+  s_67fc20933684e7::t_656e84e8f419c8 23
+  s_67fc20933684e7::t_e6eec0d68c2f9d 105,109-110,115
+vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/backend/memcache_backend.py
+  s_67fc20933684e7::t_b4f15de8f37d79 169,171
+  s_67fc20933684e7::t_c276b5a30f4895 17
+  s_67fc20933684e7::t_261974ba2e519b 141,144-146,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "91db6277fc195f23b59cca8b6fa3b04fbc9ea1e5",
+  "prompts": {},
+  "humans": {
+    "h_0f9f6044b9af38": {
+      "author": "lty <linhebiwen@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_67fc20933684e7": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a9fcab09843e86442f89b88",
+        "model": "glm-5.3__dev"
+      },
+      "human_author": "lty <linhebiwen@gmail.com>",
+      "custom_attributes": {
+        "edit_kind": "file_edit",
+        "tool_use_id": "6aa111169843e86442f8a2c2",
+        "dedupe_key": "6a9fcab09843e86442f89b88:6aa111169843e86442f8a2c2:afterEdit:b541722b",
+        "tool_id": "Edit",
+        "tool_type": "agent",
+        "source_scene": "unknown",
+        "operation_id": "6aa111169843e86442f8a2c2",
+        "session_id": "6a9fcab09843e86442f89b88",
+        "runtime_client": "trae-tob-git-ai",
+        "client_type": "ide",
+        "external_session_id": "6a9fcab09843e86442f89b88"
+      }
+    }
+  }
+}
